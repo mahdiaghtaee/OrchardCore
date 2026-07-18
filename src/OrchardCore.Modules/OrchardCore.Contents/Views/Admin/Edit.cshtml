@@ -12,11 +12,33 @@
     var contentTypeDefinition = await ContentDefinitionManager.GetTypeDefinitionAsync(contentItem.ContentType);
     var typeDisplayName = contentTypeDefinition?.DisplayName ?? contentItem.ContentType.CamelFriendly();
     string localizedTypeDisplayName = D[typeDisplayName, DataLocalizationContext.ContentType];
+
+    var returnUrl = Context.Request.Query["returnUrl"].ToString();
+    var returnUrlContext = Context.Request.Query["returnUrlContext"].ToString();
+    var returnUrlLabel = returnUrlContext switch
+    {
+        "ContentItems" => "Content items",
+        "ListItems" => "List items",
+        _ => null,
+    };
+    var hasRecognizedReturnUrl = returnUrlLabel is not null && Url.IsLocalUrl(returnUrl);
 }
 
 <zone Name="Title"><h1>@RenderTitleSegments(T["Edit {0}", localizedTypeDisplayName])</h1></zone>
 
-<form asp-action="Edit" asp-route-contentitemid="@contentItem.ContentItemId" asp-route-returnUrl="@Context.Request.Query["returnUrl"]" method="post" enctype="multipart/form-data" class="no-multisubmit">
+@if (hasRecognizedReturnUrl)
+{
+    <zone Name="Breadcrumbs">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@returnUrl">@T[returnUrlLabel]</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@T["Edit {0}", localizedTypeDisplayName]</li>
+            </ol>
+        </nav>
+    </zone>
+}
+
+<form asp-action="Edit" asp-route-contentitemid="@contentItem.ContentItemId" asp-route-returnUrl="@returnUrl" asp-route-returnUrlContext="@returnUrlContext" method="post" enctype="multipart/form-data" class="no-multisubmit">
     @if (!ViewContext.ModelState.IsValid)
     {
         @Html.ValidationSummary()

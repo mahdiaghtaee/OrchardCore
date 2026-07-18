@@ -6,11 +6,17 @@
 @{
     ContentItem contentItem = Model.ContentItem;
     var hasPublished = await ContentManager.HasPublishedVersionAsync(contentItem);
+    var returnUrlContext = ViewContext.RouteData.Values["action"]?.ToString() switch
+    {
+        "List" => "ContentItems",
+        "Display" => "ListItems",
+        _ => null,
+    };
 }
 
 @if (await AuthorizationService.AuthorizeAsync(User, CommonPermissions.EditContent, contentItem))
 {
-    <a edit-for="@contentItem" asp-route-returnUrl="@FullRequestPath" class="btn btn-sm btn-primary edit"><span>@T["Edit"]</span></a>
+    <a edit-for="@contentItem" asp-route-returnUrl="@FullRequestPath" asp-route-returnUrlContext="@returnUrlContext" class="btn btn-sm btn-primary edit"><span>@T["Edit"]</span></a>
 }
 
 @if (hasPublished)
